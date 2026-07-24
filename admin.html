@@ -32,40 +32,44 @@ main{max-width:var(--w-max);margin:0 auto;padding:1.75rem 1.25rem 4rem}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:1.4rem 1.35rem;margin-bottom:1.25rem}
 .panel h2{font-family:var(--font-display);font-size:1.05rem;font-weight:600;letter-spacing:.1em;margin:0 0 1.1rem;padding-bottom:.6rem;border-bottom:1px solid var(--line)}
 
+.steps{counter-reset:s;list-style:none;margin:0 0 1.5rem;padding:0;font-size:.9rem}
+.steps li{counter-increment:s;position:relative;padding-left:2.1rem;margin-bottom:.5rem;color:#3C4750}
+.steps li::before{
+  content:counter(s);position:absolute;left:0;top:.15rem;
+  width:1.5rem;height:1.5rem;border-radius:50%;
+  background:var(--indigo);color:#fff;font-size:.75rem;font-weight:700;
+  display:grid;place-items:center
+}
+.steps a{color:var(--indigo)}
+
 label{display:block;font-size:.86rem;font-weight:700;color:var(--slate);margin:1rem 0 .35rem}
-label:first-of-type{margin-top:0}
-input[type=text],input[type=datetime-local],textarea,select,input[type=file]{
+input[type=text],input[type=datetime-local],textarea,select{
   width:100%;padding:.65rem .7rem;font:inherit;font-size:.95rem;
   border:1px solid #C6CBC4;border-radius:6px;background:#fff;color:var(--ink)
 }
 textarea{min-height:7rem;resize:vertical;line-height:1.7}
 .hint{font-size:.8rem;color:var(--slate);margin:.35rem 0 0}
+.row{display:flex;gap:.6rem;align-items:flex-start}
+.row select{flex:1}
+
+audio{width:100%;margin-top:.7rem;display:block}
 
 .radios{display:flex;gap:.5rem;flex-wrap:wrap}
 .radios input{position:absolute;opacity:0;pointer-events:none}
-.radios span{
-  display:inline-block;padding:.5rem .95rem;border:1px solid #C6CBC4;border-radius:6px;
-  font-size:.9rem;font-weight:700;cursor:pointer;background:#fff
-}
+.radios span{display:inline-block;padding:.5rem .95rem;border:1px solid #C6CBC4;border-radius:6px;font-size:.9rem;font-weight:700;cursor:pointer;background:#fff}
 .radios input:checked + span{border-color:var(--indigo);background:#E9EDF2;color:var(--indigo)}
 .radios input:focus-visible + span{outline:3px solid var(--indigo);outline-offset:2px}
 
-.gate{
-  margin-top:1rem;padding:.9rem 1rem;border-radius:8px;
-  background:var(--seal-soft);border:1px solid #E3BDB6
-}
+.gate{margin-top:1rem;padding:.9rem 1rem;border-radius:8px;background:var(--seal-soft);border:1px solid #E3BDB6}
 .gate label{margin:0;color:var(--seal);display:flex;gap:.6rem;align-items:flex-start;font-size:.88rem;line-height:1.6}
 .gate input{margin-top:.3rem;width:1.15rem;height:1.15rem;flex:none}
 
 button{font:inherit;font-weight:700;border-radius:6px;cursor:pointer;border:1px solid transparent;padding:.7rem 1.3rem}
 .btn-main{background:var(--indigo);color:#fff;margin-top:1.5rem}
 .btn-main:disabled{background:#9AA5AE;cursor:not-allowed}
-.btn-ghost{background:#fff;border-color:#C6CBC4;color:var(--ink);padding:.4rem .8rem;font-size:.85rem}
+.btn-ghost{background:#fff;border-color:#C6CBC4;color:var(--ink);padding:.65rem .9rem;font-size:.85rem}
 .btn-danger{background:#fff;border-color:#DCB6B0;color:var(--seal);padding:.4rem .8rem;font-size:.85rem}
 button:focus-visible{outline:3px solid var(--indigo);outline-offset:2px}
-
-.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:1rem}
-.bar div{height:100%;width:0;background:var(--bamboo);transition:width .2s}
 
 .msg{margin-top:1rem;padding:.7rem .9rem;border-radius:6px;font-size:.88rem}
 .msg-ok{background:var(--bamboo-soft);color:#2F5733;border:1px solid #BCD3BC}
@@ -98,17 +102,21 @@ button:focus-visible{outline:3px solid var(--indigo);outline-offset:2px}
 </header>
 
 <main>
-  <!-- 未ログイン -->
   <section id="signinView" class="panel center">
     <p>役員のGoogleアカウントでログインしてください。</p>
     <button class="btn-main" id="signinBtn" style="margin:0">Googleでログイン</button>
     <div class="msg msg-ng" id="signinMsg" hidden></div>
   </section>
 
-  <!-- ログイン後 -->
   <div id="adminView" hidden>
     <section class="panel">
       <h2>お知らせを登録する</h2>
+
+      <ol class="steps">
+        <li>音声ファイルを <a id="uploadLink" href="#" target="_blank" rel="noopener">GitHub の audio フォルダ</a> にアップロードして Commit changes</li>
+        <li>1〜2分待ってから、下の「再読み込み」を押す</li>
+        <li>ファイルを選び、見出しと本文を入れて公開する</li>
+      </ol>
 
       <label>種別</label>
       <div class="radios">
@@ -132,9 +140,13 @@ button:focus-visible{outline:3px solid var(--indigo);outline-offset:2px}
       <textarea id="body" maxlength="600" placeholder="日時・場所・持ち物を、聞いただけで分かるように書いてください。"></textarea>
       <p class="hint">音声を再生できない方はこの文章を読みます。音声と同じ内容にしてください。</p>
 
-      <label for="file">音声ファイル</label>
-      <input type="file" id="file" accept="audio/*">
-      <p class="hint">m4a / mp3 / wav。20MBまで。長さは自動で読み取ります。</p>
+      <label for="audioFile">音声ファイル</label>
+      <div class="row">
+        <select id="audioFile"><option value="">読み込んでいます…</option></select>
+        <button class="btn-ghost" id="reloadFiles" type="button">再読み込み</button>
+      </div>
+      <p class="hint" id="fileHint">ファイル名は半角英数字にしてください（例: 20260802-natsumatsuri.m4a）。</p>
+      <audio id="preview" controls hidden></audio>
 
       <label for="publishedAt">公開日時</label>
       <input type="datetime-local" id="publishedAt">
@@ -144,7 +156,6 @@ button:focus-visible{outline:3px solid var(--indigo);outline-offset:2px}
       <p class="hint">緊急のお知らせは必ず設定してください。過ぎると自動的に一覧から消えます。</p>
 
       <button class="btn-main" id="saveBtn">公開する</button>
-      <div class="bar" id="bar" hidden><div></div></div>
       <div class="msg" id="msg" hidden></div>
     </section>
 
@@ -156,7 +167,19 @@ button:focus-visible{outline:3px solid var(--indigo);outline-offset:2px}
 </main>
 
 <script>
-/* 再生ページと同じ設定を貼り付けてください */
+/* =========================================================
+   1) GitHub リポジトリの情報
+   ========================================================= */
+const GITHUB = {
+  owner:  "Junei045",
+  repo:   "onsei-oshirase",
+  branch: "main",
+  dir:    "audio"
+};
+
+/* =========================================================
+   2) Firebase の設定（再生ページと同じ内容を貼り付け）
+   ========================================================= */
 const firebaseConfig = {
   apiKey: "",
   authDomain: "",
@@ -168,7 +191,7 @@ const firebaseConfig = {
 
 const SDK = "https://www.gstatic.com/firebasejs/10.12.2/";
 const LABEL = { urgent:"緊急", event:"イベント", info:"お知らせ" };
-const MAX_BYTES = 20 * 1024 * 1024;
+const AUDIO_EXT = /\.(m4a|mp3|wav|ogg|aac)$/i;
 
 const $ = id => document.getElementById(id);
 
@@ -177,25 +200,24 @@ function say(el, text, ok){
   el.className = "msg " + (ok ? "msg-ok" : "msg-ng");
   el.textContent = text;
 }
-function localNow(offsetMs){
-  const d = new Date(Date.now() + (offsetMs || 0));
+function localNow(){
+  const d = new Date();
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().slice(0,16);
 }
-function readDuration(file){
+function readDuration(src){
   return new Promise(resolve => {
     const a = new Audio();
-    const url = URL.createObjectURL(file);
-    a.addEventListener("loadedmetadata", () => {
-      const d = isFinite(a.duration) ? Math.round(a.duration) : 0;
-      URL.revokeObjectURL(url); resolve(d);
-    });
-    a.addEventListener("error", () => { URL.revokeObjectURL(url); resolve(0); });
-    a.src = url;
+    a.addEventListener("loadedmetadata", () => resolve(isFinite(a.duration) ? Math.round(a.duration) : 0));
+    a.addEventListener("error", () => resolve(0));
+    a.src = src;
   });
 }
 
-/* 緊急を選んだときだけ確認欄を出す */
+$("uploadLink").href =
+  `https://github.com/${GITHUB.owner}/${GITHUB.repo}/upload/${GITHUB.branch}/${GITHUB.dir}`;
+$("publishedAt").value = localNow();
+
 document.querySelectorAll('input[name=category]').forEach(r => {
   r.addEventListener("change", () => {
     const urgent = r.value === "urgent" && r.checked;
@@ -203,7 +225,14 @@ document.querySelectorAll('input[name=category]').forEach(r => {
     if(!urgent) $("urgentConfirm").checked = false;
   });
 });
-$("publishedAt").value = localNow();
+
+/* 選んだ音声をその場で試聴 */
+$("audioFile").addEventListener("change", e => {
+  const p = $("preview");
+  if(!e.target.value){ p.hidden = true; p.removeAttribute("src"); return; }
+  p.src = e.target.value;
+  p.hidden = false;
+});
 
 (async function start(){
   if(!firebaseConfig.projectId){
@@ -219,14 +248,12 @@ $("publishedAt").value = localNow();
   const { getFirestore, doc, getDoc, collection, addDoc, updateDoc, deleteDoc,
           query, orderBy, limit, getDocs, serverTimestamp, Timestamp }
     = await import(SDK + "firebase-firestore.js");
-  const { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject }
-    = await import(SDK + "firebase-storage.js");
 
-  const app = initializeApp(firebaseConfig);
+  const app  = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getFirestore(app);
-  const storage = getStorage(app);
+  const db   = getFirestore(app);
   let me = null;
+  let usedPaths = new Set();
 
   $("signinBtn").addEventListener("click", async () => {
     try{ await signInWithPopup(auth, new GoogleAuthProvider()); }
@@ -250,7 +277,8 @@ $("publishedAt").value = localNow();
     me = user;
     $("signinView").hidden = true;
     $("adminView").hidden = false;
-    $("who").innerHTML = "";
+
+    $("who").textContent = "";
     const name = document.createElement("span");
     name.textContent = user.displayName || user.email;
     const out = document.createElement("button");
@@ -259,49 +287,84 @@ $("publishedAt").value = localNow();
     out.textContent = "ログアウト";
     out.addEventListener("click", () => signOut(auth));
     $("who").append(name, out);
+
     await loadRows();
+    await loadFiles();
   });
+
+  /* ---------- GitHub の audio フォルダを読む ---------- */
+  async function loadFiles(){
+    const sel = $("audioFile");
+    sel.innerHTML = '<option value="">読み込んでいます…</option>';
+    try{
+      const url = `https://api.github.com/repos/${GITHUB.owner}/${GITHUB.repo}/contents/${GITHUB.dir}?ref=${GITHUB.branch}`;
+      const res = await fetch(url, { headers:{ Accept:"application/vnd.github+json" } });
+
+      if(res.status === 404){
+        sel.innerHTML = '<option value="">audio フォルダがまだありません</option>';
+        $("fileHint").textContent = "リポジトリに audio フォルダを作り、音声ファイルをアップロードしてください。";
+        return;
+      }
+      if(!res.ok) throw new Error(res.status);
+
+      const files = (await res.json())
+        .filter(f => f.type === "file" && AUDIO_EXT.test(f.name))
+        .sort((a,b) => b.name.localeCompare(a.name));
+
+      if(files.length === 0){
+        sel.innerHTML = '<option value="">音声ファイルがありません</option>';
+        return;
+      }
+
+      sel.innerHTML = '<option value="">選んでください</option>';
+      files.forEach(f => {
+        const path = `${GITHUB.dir}/${f.name}`;
+        const o = document.createElement("option");
+        o.value = path;
+        o.textContent = f.name + (usedPaths.has(path) ? "（登録済み）" : "");
+        sel.append(o);
+      });
+      $("fileHint").textContent =
+        "ファイル名は半角英数字にしてください（例: 20260802-natsumatsuri.m4a）。";
+    }catch(e){
+      console.error(e);
+      sel.innerHTML = '<option value="">読み込めませんでした</option>';
+      $("fileHint").textContent =
+        "GitHub からファイル一覧を取得できませんでした。少し時間をおいて再読み込みしてください。";
+    }
+  }
+  $("reloadFiles").addEventListener("click", loadFiles);
 
   /* ---------- 登録 ---------- */
   $("saveBtn").addEventListener("click", async () => {
-    const msg = $("msg"), bar = $("bar");
+    const msg = $("msg");
     msg.hidden = true;
 
-    const category = document.querySelector('input[name=category]:checked').value;
-    const title = $("title").value.trim();
-    const bodyText = $("body").value.trim();
-    const file = $("file").files[0];
-    const pub = $("publishedAt").value;
-    const exp = $("expiresAt").value;
+    const category  = document.querySelector('input[name=category]:checked').value;
+    const title     = $("title").value.trim();
+    const bodyText  = $("body").value.trim();
+    const audioPath = $("audioFile").value;
+    const pub       = $("publishedAt").value;
+    const exp       = $("expiresAt").value;
 
-    if(!title)    return say(msg, "見出しを入力してください。", false);
-    if(!bodyText) return say(msg, "本文を入力してください。音声を聞けない方のために必要です。", false);
-    if(!file)     return say(msg, "音声ファイルを選んでください。", false);
-    if(file.size > MAX_BYTES) return say(msg, "音声ファイルが20MBを超えています。短く分けるか、圧縮してください。", false);
-    if(!pub)      return say(msg, "公開日時を入力してください。", false);
+    if(!title)     return say(msg, "見出しを入力してください。", false);
+    if(!bodyText)  return say(msg, "本文を入力してください。音声を聞けない方のために必要です。", false);
+    if(!audioPath) return say(msg, "音声ファイルを選んでください。", false);
+    if(!pub)       return say(msg, "公開日時を入力してください。", false);
     if(category === "urgent" && !$("urgentConfirm").checked)
       return say(msg, "緊急として配信するには、行政発表を確認したことにチェックしてください。", false);
 
     $("saveBtn").disabled = true;
-    bar.hidden = false;
-    bar.firstElementChild.style.width = "0%";
-
     try{
-      const durationSec = await readDuration(file);
-      const ext = (file.name.split(".").pop() || "m4a").toLowerCase();
-      const path = `broadcasts/${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
-
-      const task = uploadBytesResumable(ref(storage, path), file, { contentType: file.type });
-      await new Promise((resolve, reject) => {
-        task.on("state_changed",
-          s => { bar.firstElementChild.style.width = Math.round(s.bytesTransferred / s.totalBytes * 100) + "%"; },
-          reject, resolve);
-      });
-      const audioUrl = await getDownloadURL(task.snapshot.ref);
+      const durationSec = await readDuration(audioPath);
+      if(durationSec === 0){
+        say(msg, "音声ファイルをまだ読み込めません。アップロードから公開まで1〜2分かかります。少し待ってからもう一度お試しください。", false);
+        return;
+      }
 
       await addDoc(collection(db, "broadcasts"), {
         category, title, body: bodyText,
-        audioPath: path, audioUrl, durationSec,
+        audioPath, audioUrl: audioPath, durationSec,
         publishedAt: Timestamp.fromDate(new Date(pub)),
         expiresAt: exp ? Timestamp.fromDate(new Date(exp)) : null,
         published: true,
@@ -311,22 +374,22 @@ $("publishedAt").value = localNow();
       });
 
       await addDoc(collection(db, "broadcast_logs"), {
-        action: "publish", category, title,
-        actorUid: me.uid, actorName: me.displayName || me.email,
-        at: serverTimestamp()
+        action:"publish", category, title, audioPath,
+        actorUid: me.uid, actorName: me.displayName || me.email, at: serverTimestamp()
       });
 
       say(msg, "公開しました。再生ページで確認できます。", true);
-      $("title").value = ""; $("body").value = ""; $("file").value = "";
-      $("expiresAt").value = ""; $("urgentConfirm").checked = false;
+      $("title").value = ""; $("body").value = ""; $("expiresAt").value = "";
+      $("audioFile").value = ""; $("preview").hidden = true;
+      $("urgentConfirm").checked = false;
       $("publishedAt").value = localNow();
       await loadRows();
+      await loadFiles();
     }catch(e){
       console.error(e);
       say(msg, "公開できませんでした。通信環境と権限設定をご確認ください。", false);
     }finally{
       $("saveBtn").disabled = false;
-      bar.hidden = true;
     }
   });
 
@@ -336,29 +399,38 @@ $("publishedAt").value = localNow();
     rows.textContent = "読み込んでいます…";
     const snap = await getDocs(query(collection(db, "broadcasts"), orderBy("publishedAt","desc"), limit(50)));
     rows.textContent = "";
+    usedPaths = new Set();
 
-    if(snap.empty){
-      rows.textContent = "まだ登録がありません。";
-      return;
-    }
+    if(snap.empty){ rows.textContent = "まだ登録がありません。"; return; }
 
     snap.docs.forEach(d => {
       const x = d.data();
-      const li = document.createElement("li");
+      if(x.audioPath) usedPaths.add(x.audioPath);
 
+      const li = document.createElement("li");
       const grow = document.createElement("div");
       grow.className = "grow";
+
       const h3 = document.createElement("h3");
       h3.textContent = x.title;
+
       const meta = document.createElement("div");
       meta.className = "meta";
-      meta.innerHTML =
-        `<span class="tag tag-${x.category}">${LABEL[x.category] || ""}</span>` +
-        `<span>${x.publishedAt.toDate().toLocaleString("ja-JP",{dateStyle:"medium",timeStyle:"short"})}</span>` +
-        (x.published ? "" : '<span class="state-off">非公開</span>');
+      const tag = document.createElement("span");
+      tag.className = "tag tag-" + x.category;
+      tag.textContent = LABEL[x.category] || "";
+      const when = document.createElement("span");
+      when.textContent = x.publishedAt.toDate().toLocaleString("ja-JP",{dateStyle:"medium",timeStyle:"short"});
+      meta.append(tag, when);
+      if(!x.published){
+        const off = document.createElement("span");
+        off.className = "state-off"; off.textContent = "非公開";
+        meta.append(off);
+      }
       const by = document.createElement("span");
       by.textContent = x.createdByName || "";
       meta.append(by);
+
       grow.append(h3, meta);
 
       const toggle = document.createElement("button");
@@ -377,17 +449,17 @@ $("publishedAt").value = localNow();
 
       const del = document.createElement("button");
       del.className = "btn-danger";
-      del.textContent = "削除";
+      del.textContent = "一覧から削除";
       del.addEventListener("click", async () => {
-        if(!confirm(`「${x.title}」を削除します。取り消せません。`)) return;
+        if(!confirm(`「${x.title}」を一覧から削除します。\n音声ファイルは GitHub に残ります。`)) return;
         del.disabled = true;
-        try{ if(x.audioPath) await deleteObject(ref(storage, x.audioPath)); }catch(e){ console.warn(e); }
         await deleteDoc(doc(db, "broadcasts", d.id));
         await addDoc(collection(db, "broadcast_logs"), {
-          action: "delete", category: x.category, title: x.title,
+          action:"delete", category:x.category, title:x.title, audioPath:x.audioPath,
           actorUid: me.uid, actorName: me.displayName || me.email, at: serverTimestamp()
         });
         await loadRows();
+        await loadFiles();
       });
 
       li.append(grow, toggle, del);
