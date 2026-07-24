@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // admins/{uid} という空のドキュメントが存在する人だけが管理者
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // お知らせ本体
+    match /broadcasts/{id} {
+      // 公開中のものは誰でも読める（住民向け）
+      allow read: if resource.data.published == true || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // 操作ログ：管理者だけが読み書きでき、後から書き換えられない
+    match /broadcast_logs/{id} {
+      allow read:   if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // 管理者名簿：本人が自分の行を確認できるだけ。追加は Firebase コンソールから手作業で
+    match /admins/{uid} {
+      allow read:  if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+  }
+}

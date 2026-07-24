@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>音声のお知らせ 管理｜豊田連合</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1F2933; --indigo:#24405C; --indigo-deep:#1A2E43;
+  --paper:#F2F3EF; --card:#fff;
+  --seal:#B23A2B; --seal-soft:#F6E8E5;
+  --bamboo:#4B7A4E; --bamboo-soft:#E7EFE6;
+  --slate:#68736C; --line:#DCDFD8;
+  --w-max:46rem; --r:10px;
+  --font-display:"Shippori Mincho B1",serif;
+  --font-body:"Zen Kaku Gothic New",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.7}
+
+.board{background:var(--indigo);color:#fff;border-bottom:6px solid var(--indigo-deep)}
+.board-inner{max-width:var(--w-max);margin:0 auto;padding:1.5rem 1.25rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
+.board h1{font-family:var(--font-display);font-size:1.35rem;letter-spacing:.06em;margin:0;font-weight:600}
+.who{font-size:.85rem;color:#C6D2DD}
+
+main{max-width:var(--w-max);margin:0 auto;padding:1.75rem 1.25rem 4rem}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:1.4rem 1.35rem;margin-bottom:1.25rem}
+.panel h2{font-family:var(--font-display);font-size:1.05rem;font-weight:600;letter-spacing:.1em;margin:0 0 1.1rem;padding-bottom:.6rem;border-bottom:1px solid var(--line)}
+
+label{display:block;font-size:.86rem;font-weight:700;color:var(--slate);margin:1rem 0 .35rem}
+label:first-of-type{margin-top:0}
+input[type=text],input[type=datetime-local],textarea,select,input[type=file]{
+  width:100%;padding:.65rem .7rem;font:inherit;font-size:.95rem;
+  border:1px solid #C6CBC4;border-radius:6px;background:#fff;color:var(--ink)
+}
+textarea{min-height:7rem;resize:vertical;line-height:1.7}
+.hint{font-size:.8rem;color:var(--slate);margin:.35rem 0 0}
+
+.radios{display:flex;gap:.5rem;flex-wrap:wrap}
+.radios input{position:absolute;opacity:0;pointer-events:none}
+.radios span{
+  display:inline-block;padding:.5rem .95rem;border:1px solid #C6CBC4;border-radius:6px;
+  font-size:.9rem;font-weight:700;cursor:pointer;background:#fff
+}
+.radios input:checked + span{border-color:var(--indigo);background:#E9EDF2;color:var(--indigo)}
+.radios input:focus-visible + span{outline:3px solid var(--indigo);outline-offset:2px}
+
+.gate{
+  margin-top:1rem;padding:.9rem 1rem;border-radius:8px;
+  background:var(--seal-soft);border:1px solid #E3BDB6
+}
+.gate label{margin:0;color:var(--seal);display:flex;gap:.6rem;align-items:flex-start;font-size:.88rem;line-height:1.6}
+.gate input{margin-top:.3rem;width:1.15rem;height:1.15rem;flex:none}
+
+button{font:inherit;font-weight:700;border-radius:6px;cursor:pointer;border:1px solid transparent;padding:.7rem 1.3rem}
+.btn-main{background:var(--indigo);color:#fff;margin-top:1.5rem}
+.btn-main:disabled{background:#9AA5AE;cursor:not-allowed}
+.btn-ghost{background:#fff;border-color:#C6CBC4;color:var(--ink);padding:.4rem .8rem;font-size:.85rem}
+.btn-danger{background:#fff;border-color:#DCB6B0;color:var(--seal);padding:.4rem .8rem;font-size:.85rem}
+button:focus-visible{outline:3px solid var(--indigo);outline-offset:2px}
+
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:1rem}
+.bar div{height:100%;width:0;background:var(--bamboo);transition:width .2s}
+
+.msg{margin-top:1rem;padding:.7rem .9rem;border-radius:6px;font-size:.88rem}
+.msg-ok{background:var(--bamboo-soft);color:#2F5733;border:1px solid #BCD3BC}
+.msg-ng{background:var(--seal-soft);color:var(--seal);border:1px solid #E3BDB6}
+
+.rows{list-style:none;margin:0;padding:0}
+.rows li{padding:.9rem 0;border-bottom:1px solid var(--line);display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap}
+.rows li:last-child{border-bottom:none}
+.rows .grow{flex:1;min-width:14rem}
+.rows h3{margin:0 0 .2rem;font-size:1rem;font-weight:700}
+.rows .meta{font-size:.8rem;color:var(--slate);display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.tag{font-weight:700;font-size:.72rem;padding:.15rem .5rem;border-radius:3px}
+.tag-urgent{background:var(--seal-soft);color:var(--seal)}
+.tag-event{background:var(--bamboo-soft);color:var(--bamboo)}
+.tag-info{background:#E9EDF2;color:var(--indigo)}
+.state-off{color:var(--slate);font-weight:700}
+
+.center{text-align:center;padding:3rem 1rem}
+.center p{color:var(--slate);margin:0 0 1.5rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="board-inner">
+    <h1>音声のお知らせ 管理</h1>
+    <div class="who" id="who"></div>
+  </div>
+</header>
+
+<main>
+  <!-- 未ログイン -->
+  <section id="signinView" class="panel center">
+    <p>役員のGoogleアカウントでログインしてください。</p>
+    <button class="btn-main" id="signinBtn" style="margin:0">Googleでログイン</button>
+    <div class="msg msg-ng" id="signinMsg" hidden></div>
+  </section>
+
+  <!-- ログイン後 -->
+  <div id="adminView" hidden>
+    <section class="panel">
+      <h2>お知らせを登録する</h2>
+
+      <label>種別</label>
+      <div class="radios">
+        <label style="margin:0"><input type="radio" name="category" value="info" checked><span>お知らせ</span></label>
+        <label style="margin:0"><input type="radio" name="category" value="event"><span>イベント</span></label>
+        <label style="margin:0"><input type="radio" name="category" value="urgent"><span>緊急</span></label>
+      </div>
+
+      <div class="gate" id="urgentGate" hidden>
+        <label>
+          <input type="checkbox" id="urgentConfirm">
+          <span>横浜市・栄区の発表を確認しました。この配信は行政情報の補足であり、独自の避難判断を求めるものではありません。</span>
+        </label>
+      </div>
+
+      <label for="title">見出し</label>
+      <input type="text" id="title" maxlength="60" placeholder="夏まつりの準備、8月2日に集合します">
+      <p class="hint">一覧に大きく表示されます。60文字まで。</p>
+
+      <label for="body">本文（読み上げ原稿と兼用）</label>
+      <textarea id="body" maxlength="600" placeholder="日時・場所・持ち物を、聞いただけで分かるように書いてください。"></textarea>
+      <p class="hint">音声を再生できない方はこの文章を読みます。音声と同じ内容にしてください。</p>
+
+      <label for="file">音声ファイル</label>
+      <input type="file" id="file" accept="audio/*">
+      <p class="hint">m4a / mp3 / wav。20MBまで。長さは自動で読み取ります。</p>
+
+      <label for="publishedAt">公開日時</label>
+      <input type="datetime-local" id="publishedAt">
+
+      <label for="expiresAt">掲載終了日時（任意）</label>
+      <input type="datetime-local" id="expiresAt">
+      <p class="hint">緊急のお知らせは必ず設定してください。過ぎると自動的に一覧から消えます。</p>
+
+      <button class="btn-main" id="saveBtn">公開する</button>
+      <div class="bar" id="bar" hidden><div></div></div>
+      <div class="msg" id="msg" hidden></div>
+    </section>
+
+    <section class="panel">
+      <h2>登録済みのお知らせ</h2>
+      <ul class="rows" id="rows"></ul>
+    </section>
+  </div>
+</main>
+
+<script>
+/* 再生ページと同じ設定を貼り付けてください */
+const firebaseConfig = {
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+
+const SDK = "https://www.gstatic.com/firebasejs/10.12.2/";
+const LABEL = { urgent:"緊急", event:"イベント", info:"お知らせ" };
+const MAX_BYTES = 20 * 1024 * 1024;
+
+const $ = id => document.getElementById(id);
+
+function say(el, text, ok){
+  el.hidden = false;
+  el.className = "msg " + (ok ? "msg-ok" : "msg-ng");
+  el.textContent = text;
+}
+function localNow(offsetMs){
+  const d = new Date(Date.now() + (offsetMs || 0));
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0,16);
+}
+function readDuration(file){
+  return new Promise(resolve => {
+    const a = new Audio();
+    const url = URL.createObjectURL(file);
+    a.addEventListener("loadedmetadata", () => {
+      const d = isFinite(a.duration) ? Math.round(a.duration) : 0;
+      URL.revokeObjectURL(url); resolve(d);
+    });
+    a.addEventListener("error", () => { URL.revokeObjectURL(url); resolve(0); });
+    a.src = url;
+  });
+}
+
+/* 緊急を選んだときだけ確認欄を出す */
+document.querySelectorAll('input[name=category]').forEach(r => {
+  r.addEventListener("change", () => {
+    const urgent = r.value === "urgent" && r.checked;
+    $("urgentGate").hidden = !urgent;
+    if(!urgent) $("urgentConfirm").checked = false;
+  });
+});
+$("publishedAt").value = localNow();
+
+(async function start(){
+  if(!firebaseConfig.projectId){
+    $("signinMsg").hidden = false;
+    $("signinMsg").textContent = "Firebase の設定がまだ入っていません。firebaseConfig を埋めてから使ってください。";
+    $("signinBtn").disabled = true;
+    return;
+  }
+
+  const { initializeApp } = await import(SDK + "firebase-app.js");
+  const { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+    = await import(SDK + "firebase-auth.js");
+  const { getFirestore, doc, getDoc, collection, addDoc, updateDoc, deleteDoc,
+          query, orderBy, limit, getDocs, serverTimestamp, Timestamp }
+    = await import(SDK + "firebase-firestore.js");
+  const { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject }
+    = await import(SDK + "firebase-storage.js");
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
+  let me = null;
+
+  $("signinBtn").addEventListener("click", async () => {
+    try{ await signInWithPopup(auth, new GoogleAuthProvider()); }
+    catch(e){ say($("signinMsg"), "ログインできませんでした。もう一度お試しください。", false); }
+  });
+
+  onAuthStateChanged(auth, async user => {
+    if(!user){
+      me = null;
+      $("signinView").hidden = false;
+      $("adminView").hidden = true;
+      $("who").textContent = "";
+      return;
+    }
+    const allowed = (await getDoc(doc(db, "admins", user.uid))).exists();
+    if(!allowed){
+      await signOut(auth);
+      say($("signinMsg"), "このアカウントには管理権限がありません。連合の担当者にご連絡ください。", false);
+      return;
+    }
+    me = user;
+    $("signinView").hidden = true;
+    $("adminView").hidden = false;
+    $("who").innerHTML = "";
+    const name = document.createElement("span");
+    name.textContent = user.displayName || user.email;
+    const out = document.createElement("button");
+    out.className = "btn-ghost";
+    out.style.marginLeft = ".75rem";
+    out.textContent = "ログアウト";
+    out.addEventListener("click", () => signOut(auth));
+    $("who").append(name, out);
+    await loadRows();
+  });
+
+  /* ---------- 登録 ---------- */
+  $("saveBtn").addEventListener("click", async () => {
+    const msg = $("msg"), bar = $("bar");
+    msg.hidden = true;
+
+    const category = document.querySelector('input[name=category]:checked').value;
+    const title = $("title").value.trim();
+    const bodyText = $("body").value.trim();
+    const file = $("file").files[0];
+    const pub = $("publishedAt").value;
+    const exp = $("expiresAt").value;
+
+    if(!title)    return say(msg, "見出しを入力してください。", false);
+    if(!bodyText) return say(msg, "本文を入力してください。音声を聞けない方のために必要です。", false);
+    if(!file)     return say(msg, "音声ファイルを選んでください。", false);
+    if(file.size > MAX_BYTES) return say(msg, "音声ファイルが20MBを超えています。短く分けるか、圧縮してください。", false);
+    if(!pub)      return say(msg, "公開日時を入力してください。", false);
+    if(category === "urgent" && !$("urgentConfirm").checked)
+      return say(msg, "緊急として配信するには、行政発表を確認したことにチェックしてください。", false);
+
+    $("saveBtn").disabled = true;
+    bar.hidden = false;
+    bar.firstElementChild.style.width = "0%";
+
+    try{
+      const durationSec = await readDuration(file);
+      const ext = (file.name.split(".").pop() || "m4a").toLowerCase();
+      const path = `broadcasts/${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
+
+      const task = uploadBytesResumable(ref(storage, path), file, { contentType: file.type });
+      await new Promise((resolve, reject) => {
+        task.on("state_changed",
+          s => { bar.firstElementChild.style.width = Math.round(s.bytesTransferred / s.totalBytes * 100) + "%"; },
+          reject, resolve);
+      });
+      const audioUrl = await getDownloadURL(task.snapshot.ref);
+
+      await addDoc(collection(db, "broadcasts"), {
+        category, title, body: bodyText,
+        audioPath: path, audioUrl, durationSec,
+        publishedAt: Timestamp.fromDate(new Date(pub)),
+        expiresAt: exp ? Timestamp.fromDate(new Date(exp)) : null,
+        published: true,
+        createdBy: me.uid,
+        createdByName: me.displayName || me.email,
+        createdAt: serverTimestamp()
+      });
+
+      await addDoc(collection(db, "broadcast_logs"), {
+        action: "publish", category, title,
+        actorUid: me.uid, actorName: me.displayName || me.email,
+        at: serverTimestamp()
+      });
+
+      say(msg, "公開しました。再生ページで確認できます。", true);
+      $("title").value = ""; $("body").value = ""; $("file").value = "";
+      $("expiresAt").value = ""; $("urgentConfirm").checked = false;
+      $("publishedAt").value = localNow();
+      await loadRows();
+    }catch(e){
+      console.error(e);
+      say(msg, "公開できませんでした。通信環境と権限設定をご確認ください。", false);
+    }finally{
+      $("saveBtn").disabled = false;
+      bar.hidden = true;
+    }
+  });
+
+  /* ---------- 一覧 ---------- */
+  async function loadRows(){
+    const rows = $("rows");
+    rows.textContent = "読み込んでいます…";
+    const snap = await getDocs(query(collection(db, "broadcasts"), orderBy("publishedAt","desc"), limit(50)));
+    rows.textContent = "";
+
+    if(snap.empty){
+      rows.textContent = "まだ登録がありません。";
+      return;
+    }
+
+    snap.docs.forEach(d => {
+      const x = d.data();
+      const li = document.createElement("li");
+
+      const grow = document.createElement("div");
+      grow.className = "grow";
+      const h3 = document.createElement("h3");
+      h3.textContent = x.title;
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.innerHTML =
+        `<span class="tag tag-${x.category}">${LABEL[x.category] || ""}</span>` +
+        `<span>${x.publishedAt.toDate().toLocaleString("ja-JP",{dateStyle:"medium",timeStyle:"short"})}</span>` +
+        (x.published ? "" : '<span class="state-off">非公開</span>');
+      const by = document.createElement("span");
+      by.textContent = x.createdByName || "";
+      meta.append(by);
+      grow.append(h3, meta);
+
+      const toggle = document.createElement("button");
+      toggle.className = "btn-ghost";
+      toggle.textContent = x.published ? "非公開にする" : "公開する";
+      toggle.addEventListener("click", async () => {
+        toggle.disabled = true;
+        await updateDoc(doc(db, "broadcasts", d.id), { published: !x.published });
+        await addDoc(collection(db, "broadcast_logs"), {
+          action: x.published ? "unpublish" : "republish",
+          category: x.category, title: x.title,
+          actorUid: me.uid, actorName: me.displayName || me.email, at: serverTimestamp()
+        });
+        await loadRows();
+      });
+
+      const del = document.createElement("button");
+      del.className = "btn-danger";
+      del.textContent = "削除";
+      del.addEventListener("click", async () => {
+        if(!confirm(`「${x.title}」を削除します。取り消せません。`)) return;
+        del.disabled = true;
+        try{ if(x.audioPath) await deleteObject(ref(storage, x.audioPath)); }catch(e){ console.warn(e); }
+        await deleteDoc(doc(db, "broadcasts", d.id));
+        await addDoc(collection(db, "broadcast_logs"), {
+          action: "delete", category: x.category, title: x.title,
+          actorUid: me.uid, actorName: me.displayName || me.email, at: serverTimestamp()
+        });
+        await loadRows();
+      });
+
+      li.append(grow, toggle, del);
+      rows.append(li);
+    });
+  }
+})();
+</script>
+</body>
+</html>

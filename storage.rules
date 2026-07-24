@@ -1,0 +1,18 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /broadcasts/{fileName} {
+
+      // 住民が再生できるよう読み取りは公開
+      allow read: if true;
+
+      // 書き込みはログイン済みのみ。音声ファイル・20MB以下に限定
+      // ※Storage ルールから Firestore の admins は参照できないため、
+      //   管理者判定は index/admin 側と Firestore ルールで担保している
+      allow write: if request.auth != null
+        && request.resource.size < 20 * 1024 * 1024
+        && request.resource.contentType.matches('audio/.*');
+    }
+  }
+}
