@@ -113,7 +113,8 @@ button:focus-visible{outline:3px solid var(--indigo);outline-offset:2px}
       <h2>お知らせを登録する</h2>
 
       <ol class="steps">
-        <li>音声ファイルを <a id="uploadLink" href="#" target="_blank" rel="noopener">GitHub の audio フォルダ</a> にアップロードして Commit changes</li>
+        <li>手元の「音声生成ツール」を localhost で開き、本文から MP3 をつくる（VOICEVOX の起動が必要）</li>
+        <li>できた MP3 を <a id="uploadLink" href="#" target="_blank" rel="noopener">GitHub の audio フォルダ</a> にアップロードして Commit changes</li>
         <li>1〜2分待ってから、下の「再読み込み」を押す</li>
         <li>ファイルを選び、見出しと本文を入れて公開する</li>
       </ol>
@@ -145,7 +146,7 @@ button:focus-visible{outline:3px solid var(--indigo);outline-offset:2px}
         <select id="audioFile"><option value="">読み込んでいます…</option></select>
         <button class="btn-ghost" id="reloadFiles" type="button">再読み込み</button>
       </div>
-      <p class="hint" id="fileHint">ファイル名は半角英数字にしてください（例: 20260802-natsumatsuri.m4a）。</p>
+      <p class="hint" id="fileHint">ファイル名は半角英数字にしてください（例: oshirase-20260725.mp3）。</p>
       <audio id="preview" controls hidden></audio>
 
       <label for="publishedAt">公開日時</label>
@@ -325,7 +326,7 @@ $("audioFile").addEventListener("change", e => {
         sel.append(o);
       });
       $("fileHint").textContent =
-        "ファイル名は半角英数字にしてください（例: 20260802-natsumatsuri.m4a）。";
+        "ファイル名は半角英数字にしてください（例: oshirase-20260725.mp3）。";
     }catch(e){
       console.error(e);
       sel.innerHTML = '<option value="">読み込めませんでした</option>';
