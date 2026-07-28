@@ -52,6 +52,16 @@ textarea{min-height:7rem;resize:vertical;line-height:1.7}
 .row{display:flex;gap:.6rem;align-items:flex-start}
 .row select{flex:1}
 
+/* 文字数カウンタ（説明文と同じ行の右端に置く） */
+.hint-row{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap}
+.hint-row .hint{margin:.35rem 0 0}
+.count{
+  font-size:.8rem;color:var(--slate);margin:.35rem 0 0;
+  font-variant-numeric:tabular-nums;white-space:nowrap
+}
+.count.near{color:#8A6A1F;font-weight:700}
+.count.full{color:var(--seal);font-weight:700}
+
 audio{width:100%;margin-top:.7rem;display:block}
 
 .radios{display:flex;gap:.5rem;flex-wrap:wrap}
@@ -135,11 +145,17 @@ button:focus-visible{outline:3px solid var(--indigo);outline-offset:2px}
 
       <label for="title">見出し</label>
       <input type="text" id="title" maxlength="60" placeholder="夏まつりの準備、8月2日に集合します">
-      <p class="hint">一覧に大きく表示されます。60文字まで。</p>
+      <div class="hint-row">
+        <p class="hint">一覧に大きく表示されます。</p>
+        <p class="count" id="titleCount">0 / 60 字</p>
+      </div>
 
       <label for="body">本文（読み上げ原稿と兼用）</label>
       <textarea id="body" maxlength="3000" placeholder="日時・場所・持ち物を、聞いただけで分かるように書いてください。"></textarea>
-      <p class="hint">音声を再生できない方はこの文章を読みます。音声と同じ内容にしてください。</p>
+      <div class="hint-row">
+        <p class="hint">音声を再生できない方はこの文章を読みます。音声と同じ内容にしてください。</p>
+        <p class="count" id="bodyCount">0 / 3000 字</p>
+      </div>
 
       <label for="audioFile">音声ファイル</label>
       <div class="row">
@@ -190,6 +206,18 @@ const firebaseConfig = {
   appId: "1:898779126424:web:a103ab9eab844259b24eed"
 };
 
+/* =========================================================
+   3) 入力の上限と、読み上げ速度の目安
+   ── ここを直せば入力欄の上限も表示も一度に変わります ──
+   ========================================================= */
+/** 見出しの上限（字） */
+const TITLE_MAX = 60;
+/** 本文の上限（字）。Firestore は1件1MBまで入るので技術的な制約ではなく、
+    長すぎるお知らせを防ぐための歯止めです。3000字で音声は約9分。 */
+const BODY_MAX = 3000;
+/** VOICEVOX の読み上げ速度の目安（1分あたりの文字数・話す速さ1.0のとき） */
+const CHARS_PER_MIN = 330;
+
 const SDK = "https://www.gstatic.com/firebasejs/10.12.2/";
 const LABEL = { urgent:"緊急", event:"イベント", info:"お知らせ" };
 const AUDIO_EXT = /\.(m4a|mp3|wav|ogg|aac)$/i;
@@ -214,6 +242,41 @@ function readDuration(src){
     a.src = src;
   });
 }
+
+/* ---------- 文字数カウンタ ---------- */
+
+/** 秒数を「2分50秒」の形にする */
+function fmtDuration(sec){
+  const m = Math.floor(sec / 60);
+  const s = Math.round(sec % 60);
+  return m > 0 ? `${m}分${String(s).padStart(2,"0")}秒` : `${s}秒`;
+}
+
+/** 残り具合に応じて色を変える（9割で黄、上限で赤） */
+function paintCount(el, used, max){
+  el.classList.toggle("near", used >= max * 0.9 && used < max);
+  el.classList.toggle("full", used >= max);
+}
+
+function updateCounts(){
+  const t = $("title").value.length;
+  $("titleCount").textContent = `${t} / ${TITLE_MAX} 字`;
+  paintCount($("titleCount"), t, TITLE_MAX);
+
+  const b = $("body").value.length;
+  const sec = b / CHARS_PER_MIN * 60;
+  $("bodyCount").textContent = b > 0
+    ? `${b} / ${BODY_MAX} 字 ・ 読み上げ 約${fmtDuration(sec)}`
+    : `0 / ${BODY_MAX} 字`;
+  paintCount($("bodyCount"), b, BODY_MAX);
+}
+
+// 上限は定数から入力欄へ反映する（HTMLと定数がずれないように）
+$("title").maxLength = TITLE_MAX;
+$("body").maxLength  = BODY_MAX;
+$("title").addEventListener("input", updateCounts);
+$("body").addEventListener("input", updateCounts);
+updateCounts();
 
 $("uploadLink").href =
   `https://github.com/${GITHUB.owner}/${GITHUB.repo}/upload/${GITHUB.branch}/${GITHUB.dir}`;
@@ -306,6 +369,12 @@ $("audioFile").addEventListener("change", e => {
         $("fileHint").textContent = "リポジトリに audio フォルダを作り、音声ファイルをアップロードしてください。";
         return;
       }
+      if(res.status === 403){
+        sel.innerHTML = '<option value="">しばらく待ってからお試しください</option>';
+        $("fileHint").textContent =
+          "GitHub への問い合わせが続いたため、一時的に制限されています。10分ほど待ってから再読み込みしてください。";
+        return;
+      }
       if(!res.ok) throw new Error(res.status);
 
       const files = (await res.json())
@@ -384,6 +453,7 @@ $("audioFile").addEventListener("change", e => {
       $("audioFile").value = ""; $("preview").hidden = true;
       $("urgentConfirm").checked = false;
       $("publishedAt").value = localNow();
+      updateCounts();
       await loadRows();
       await loadFiles();
     }catch(e){
